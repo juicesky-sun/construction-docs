@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>施工日志模板管理 - 原型</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; }
+
+.header { background: #fff; padding: 16px 24px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 18px; font-weight: 600; color: #1a1a1a; }
+.header .user { font-size: 14px; color: #666; }
+
+.container { max-width: 1400px; margin: 24px auto; padding: 0 24px; }
+
+/* Tab Navigation */
+.tabs { display: flex; gap: 0; margin-bottom: 24px; background: #fff; border-radius: 8px; padding: 4px; width: fit-content; }
+.tab { padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; color: #666; transition: all 0.2s; }
+.tab:hover { color: #1890ff; }
+.tab.active { background: #1890ff; color: #fff; font-weight: 500; }
+
+/* Panel */
+.panel { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.panel-header { padding: 16px 20px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+.panel-title { font-size: 15px; font-weight: 600; }
+.panel-body { padding: 20px; }
+
+/* Buttons */
+.btn { padding: 8px 16px; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; }
+.btn-primary { background: #1890ff; color: #fff; }
+.btn-primary:hover { background: #40a9ff; }
+.btn-default { background: #fff; border: 1px solid #d9d9d9; color: #333; }
+.btn-default:hover { border-color: #1890ff; color: #1890ff; }
+.btn-danger { background: #fff; border: 1px solid #ff4d4f; color: #ff4d4f; }
+.btn-danger:hover { background: #ff4d4f; color: #fff; }
+.btn-sm { padding: 4px 12px; font-size: 13px; }
+
+/* Template List */
+.template-list { display: grid; gap: 16px; }
+.template-card { border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; transition: all 0.2s; }
+.template-card:hover { border-color: #1890ff; box-shadow: 0 2px 8px rgba(24,144,255,0.1); }
+.template-card.is-default { border-color: #52c41a; background: #f6ffed; }
+.template-info { flex: 1; }
+.template-name { font-size: 15px; font-weight: 600; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.template-name .badge { font-size: 11px; padding: 2px 6px; border-radius: 3px; font-weight: normal; }
+.badge-default { background: #f0f0f0; color: #666; }
+.badge-active { background: #52c41a; color: #fff; }
+.template-meta { font-size: 13px; color: #999; }
+.template-meta span { margin-right: 16px; }
+.template-actions { display: flex; gap: 8px; }
+
+/* Section Editor */
+.section-list { display: flex; flex-direction: column; gap: 12px; }
+.section-item { border: 1px solid #e8e8e8; border-radius: 8px; overflow: hidden; }
+.section-header { background: #fafafa; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.section-title { font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.section-title .icon { width: 20px; height: 20px; background: #1890ff; border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 12px; }
+.section-body { padding: 16px; border-top: 1px solid #e8e8e8; }
+.section-body.hidden { display: none; }
+
+/* Field Items */
+.field-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px dashed #f0f0f0; }
+.field-item:last-child { border-bottom: none; }
+.field-label { width: 100px; font-size: 14px; color: #333; }
+.field-type { width: 100px; }
+.field-source { flex: 1; }
+.field-required { width: 60px; text-align: center; }
+
+/* Form Controls */
+select, input[type="text"], textarea { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; outline: none; transition: all 0.2s; }
+select:focus, input:focus, textarea:focus { border-color: #1890ff; box-shadow: 0 0 0 2px rgba(24,144,255,0.1); }
+select { width: 120px; background: #fff; }
+input[type="text"] { width: 120px; }
+textarea { width: 100%; resize: vertical; min-height: 60px; }
+input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+/* Add Section/Field */
+.add-row { padding: 12px 0; }
+.add-section-btn, .add-field-btn { border: 1px dashed #d9d9d9; background: #fafafa; color: #666; width: 100%; text-align: center; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+.add-section-btn:hover, .add-field-btn:hover { border-color: #1890ff; color: #1890ff; background: #e6f7ff; }
+
+/* Project Assignment */
+.project-assign { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.project-item { border: 1px solid #e8e8e8; border-radius: 8px; padding: 16px; }
+.project-item .project-name { font-weight: 600; margin-bottom: 8px; font-size: 14px; }
+.project-item select { width: 100%; }
+
+/* Log Preview */
+.log-preview { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 40px; max-width: 800px; margin: 0 auto; }
+.log-preview-title { text-align: center; font-size: 20px; font-weight: bold; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #333; }
+.log-header { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; font-size: 14px; }
+.log-header-item { display: flex; gap: 8px; }
+.log-header-item .label { color: #666; }
+.log-header-item .value { font-weight: 500; }
+.log-section { margin-bottom: 20px; }
+.log-section-title { font-weight: 600; font-size: 15px; padding: 8px 0; border-bottom: 1px solid #333; margin-bottom: 12px; }
+.log-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.log-table th, .log-table td { border: 1px solid #333; padding: 8px 12px; text-align: left; }
+.log-table th { background: #f5f5f5; font-weight: 600; }
+.log-footer { margin-top: 40px; display: flex; justify-content: space-between; }
+.log-signature { display: flex; gap: 60px; }
+.signature-item { text-align: center; font-size: 13px; }
+.signature-line { margin-top: 50px; border-top: 1px solid #333; width: 120px; }
+
+/* Modal */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-overlay.hidden { display: none; }
+.modal { background: #fff; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow: auto; }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid #e8e8e8; display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close { font-size: 20px; cursor: pointer; color: #999; }
+.modal-close:hover { color: #333; }
+.modal-body { padding: 20px; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #e8e8e8; display: flex; justify-content: flex-end; gap: 12px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 14px; margin-bottom: 6px; color: #333; font-weight: 500; }
+.form-hint { font-size: 12px; color: #999; margin-top: 4px; }
+
+/* Weather Widget */
+.weather-widget { display: flex; align-items: center; gap: 16px; background: #e6f7ff; border: 1px solid #91d5ff; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; }
+.weather-icon { font-size: 32px; }
+.weather-info { font-size: 14px; }
+.weather-temp { font-size: 20px; font-weight: 600; }
+
+/* Empty State */
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏗️ 施工现场管理系统 - 施工日志模板管理</h1>
+  <span class="user">工程部 · 张工</span>
+</div>
+
+<div class="container">
+
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab(this, 'template-list')">📋 模板列表</div>
+    <div class="tab" onclick="switchTab(this, 'template-editor')">✏️ 模板编辑</div>
+    <div class="tab" onclick="switchTab(this, 'project-assign')">🔗 项目关联</div>
+    <div class="tab" onclick="switchTab(this, 'log-preview')">👁️ 日志预览</div>
+  </div>
+
+  <!-- Tab: 模板列表 -->
+  <div id="template-list" class="tab-content">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">日志模板（共 4 套）</span>
+        <button class="btn btn-primary" onclick="openModal('create-template')">+ 新建模板</button>
+      </div>
+      <div class="panel-body">
+        <div class="template-list">
+          
+          <div class="template-card is-default">
+            <div class="template-info">
+              <div class="template-name">
+                标准施工日志模板
+                <span class="badge badge-active">默认</span>
+              </div>
+              <div class="template-meta">
+                <span>📅 创建于 2026-04-20</span>
+                <span>🔧 6 个板块</span>
+                <span>📁 12 个项目使用</span>
+              </div>
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-default btn-sm" onclick="switchTab(document.querySelectorAll('.tab')[1], 'template-editor')">编辑</button>
+              <button class="btn btn-default btn-sm">复制</button>
+              <button class="btn btn-danger btn-sm">删除</button>
+            </div>
+          </div>
+
+          <div class="template-card">
+            <div class="template-info">
+              <div class="template-name">房建项目日志模板</div>
+              <div class="template-meta">
+                <span>📅 创建于 2026-04-18</span>
+                <span>🔧 8 个板块</span>
+                <span>📁 5 个项目使用</span>
+              </div>
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-default btn-sm" onclick="switchTab(document.querySelectorAll('.tab')[1], 'template-editor')">编辑</button>
+              <button class="btn btn-default btn-sm">复制</button>
+              <button class="btn btn-danger btn-sm">删除</button>
+            </div>
+          </div>
+
+          <div class="template-card">
+            <div class="template-info">
+              <div class="template-name">市政工程日志模板</div>
+              <div class="template-meta">
+                <span>📅 创建于 2026-04-15</span>
+                <span>🔧 7 个板块</span>
+                <span>📁 3 个项目使用</span>
+              </div>
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-default btn-sm" onclick="switchTab(document.querySelectorAll('.tab')[1], 'template-editor')">编辑</button>
+              <button class="btn btn-default btn-sm">复制</button>
+              <button class="btn btn-danger btn-sm">删除</button>
+            </div>
+          </div>
+
+          <div class="template-card">
+            <div class="template-info">
+              <div class="template-name">铁路工程日志模板</div>
+              <div class="template-meta">
+                <span>📅 创建于 2026-04-10</span>
+                <span>🔧 9 个板块</span>
+                <span>📁 2 个项目使用</span>
+              </div>
+            </div>
+            <div class="template-actions">
+              <button class="btn btn-default btn-sm" onclick="switchTab(document.querySelectorAll('.tab')[1], 'template-editor')">编辑</button>
+              <button class="btn btn-default btn-sm">复制</button>
+              <button class="btn btn-danger btn-sm">删除</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: 模板编辑 -->
+  <div id="template-editor" class="tab-content" style="display:none;">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">✏️ 编辑模板：标准施工日志模板</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-default">保存为草稿</button>
+          <button class="btn btn-primary">发布模板</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        
+        <!-- Basic Info -->
+        <div style="margin-bottom: 24px;">
+          <div class="form-group" style="max-width: 400px;">
+            <label class="form-label">模板名称</label>
+            <input type="text" value="标准施工日志模板" style="width: 100%;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">模板说明</label>
+            <textarea placeholder="描述此模板的适用场景...">适用于一般房屋建筑工程，可根据项目实际情况调整板块内容。</textarea>
+          </div>
+        </div>
+
+        <!-- Sections -->
+        <div class="section-list">
+          
+          <!-- Section 1: 基本信息 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">1</span>
+                基本信息
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">日期</span>
+                <select class="field-type">
+                  <option>日期</option>
+                </select>
+                <select class="field-source">
+                  <option value="auto:log_date">自动：日志日期</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✓</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">天气</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="auto:weather">自动：和风天气API</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✓</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">温度</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="auto:temperature">自动：和风天气API</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">施工部位</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:location">自动：进度任务位置</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+          <!-- Section 2: 人员投入 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">2</span>
+                人员投入
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">施工人员数量</span>
+                <select class="field-type">
+                  <option>数字</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:labor_count">自动：实际进度人员数</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✓</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">人员明细</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:labor_detail">自动：实际进度人员明细</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">工种分布</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:labor_type">自动：工种统计</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+          <!-- Section 3: 机械设备 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">3</span>
+                机械设备
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">设备名称</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:equipment">自动：实际进度设备</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">设备数量</span>
+                <select class="field-type">
+                  <option>数字</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:equipment_count">自动：设备数量</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+          <!-- Section 4: 材料消耗 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">4</span>
+                材料消耗
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">物料名称</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="material:name">自动：物料台账</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">消耗数量</span>
+                <select class="field-type">
+                  <option>数字</option>
+                </select>
+                <select class="field-source">
+                  <option value="material:actual_quantity">自动：实际用量</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">使用部位</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="material:usage_location">自动：使用位置</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">备注说明</span>
+                <select class="field-type">
+                  <option>文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="material:remark">自动：物料备注</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+          <!-- Section 5: 施工内容 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">5</span>
+                施工内容
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">完成工作</span>
+                <select class="field-type">
+                  <option>多行文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="manual">手动填写</option>
+                  <option value="actual:construction_content">自动：施工内容描述</option>
+                </select>
+                <span class="field-required">✓</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">完成工程量</span>
+                <select class="field-type">
+                  <option>数字</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:completed_quantity">自动：当日完成量</option>
+                  <option value="manual">手动填写</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+          <!-- Section 6: 备注 -->
+          <div class="section-item">
+            <div class="section-header" onclick="toggleSection(this)">
+              <div class="section-title">
+                <span class="icon">6</span>
+                备注
+              </div>
+              <span>▼</span>
+            </div>
+            <div class="section-body">
+              <div class="field-item">
+                <span class="field-label">备注说明</span>
+                <select class="field-type">
+                  <option>多行文本</option>
+                </select>
+                <select class="field-source">
+                  <option value="manual">手动填写</option>
+                  <option value="actual:remark">自动：进度备注</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="field-item">
+                <span class="field-label">附件照片</span>
+                <select class="field-type">
+                  <option>图片</option>
+                </select>
+                <select class="field-source">
+                  <option value="actual:photo">自动：现场照片</option>
+                  <option value="manual">手动上传</option>
+                </select>
+                <span class="field-required">✗</span>
+              </div>
+              <div class="add-field-btn" onclick="addField(this)">+ 添加字段</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="add-section-btn" style="margin-top: 16px;">+ 添加板块</div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: 项目关联 -->
+  <div id="project-assign" class="tab-content" style="display:none;">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">🔗 项目模板分配</span>
+        <button class="btn btn-primary">保存分配方案</button>
+      </div>
+      <div class="panel-body">
+        <div class="project-assign">
+          
+          <div class="project-item">
+            <div class="project-name">🏗️ 碧桂园·龙城天悦（一期）</div>
+            <select>
+              <option value="1" selected>标准施工日志模板</option>
+              <option value="2">房建项目日志模板</option>
+              <option value="3">市政工程日志模板</option>
+              <option value="4">铁路工程日志模板</option>
+            </select>
+          </div>
+
+          <div class="project-item">
+            <div class="project-name">🏗️ 万科·城市花园（二标段）</div>
+            <select>
+              <option value="1">标准施工日志模板</option>
+              <option value="2" selected>房建项目日志模板</option>
+              <option value="3">市政工程日志模板</option>
+              <option value="4">铁路工程日志模板</option>
+            </select>
+          </div>
+
+          <div class="project-item">
+            <div class="project-name">🛣️ G312国道改造工程</div>
+            <select>
+              <option value="1">标准施工日志模板</option>
+              <option value="2">房建项目日志模板</option>
+              <option value="3" selected>市政工程日志模板</option>
+              <option value="4">铁路工程日志模板</option>
+            </select>
+          </div>
+
+          <div class="project-item">
+            <div class="project-name">🚄 沪宁城际铁路站前工程</div>
+            <select>
+              <option value="1">标准施工日志模板</option>
+              <option value="2">房建项目日志模板</option>
+              <option value="3">市政工程日志模板</option>
+              <option value="4" selected>铁路工程日志模板</option>
+            </select>
+          </div>
+
+          <div class="project-item">
+            <div class="project-name">🏗️ 保利·中央公园（住宅）</div>
+            <select>
+              <option value="1" selected>标准施工日志模板</option>
+              <option value="2">房建项目日志模板</option>
+              <option value="3">市政工程日志模板</option>
+              <option value="4">铁路工程日志模板</option>
+            </select>
+          </div>
+
+          <div class="project-item">
+            <div class="project-name">🏗️ 绿地·国际花都（三期）</div>
+            <select>
+              <option value="1">标准施工日志模板</option>
+              <option value="2">房建项目日志模板</option>
+              <option value="3" selected>市政工程日志模板</option>
+              <option value="4">铁路工程日志模板</option>
+            </select>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: 日志预览 -->
+  <div id="log-preview" class="tab-content" style="display:none;">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">👁️ 今日施工日志预览</span>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-default">🖨️ 打印设置</button>
+          <button class="btn btn-primary">🖨️ 一键打印</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        
+        <!-- Weather Widget -->
+        <div class="weather-widget">
+          <span class="weather-icon">☀️</span>
+          <div class="weather-info">
+            <div>郑州市 · 金水区</div>
+            <div class="weather-temp">28°C <span style="font-size:14px;font-weight:normal;">晴</span></div>
+          </div>
+          <div style="margin-left: auto; font-size: 13px; color: #52c41a;">
+            ✓ 天气已自动获取
+          </div>
+        </div>
+
+        <!-- Log Preview -->
+        <div class="log-preview" id="printArea">
+          <div class="log-preview-title">施 工 日 志</div>
+          
+          <div class="log-header">
+            <div class="log-header-item">
+              <span class="label">日期：</span>
+              <span class="value">2026年04月27日</span>
+            </div>
+            <div class="log-header-item">
+              <span class="label">天气：</span>
+              <span class="value">晴 28°C</span>
+            </div>
+            <div class="log-header-item">
+              <span class="label">项目：</span>
+              <span class="value">碧桂园·龙城天悦</span>
+            </div>
+            <div class="log-header-item">
+              <span class="label">填报人：</span>
+              <span class="value">李明</span>
+            </div>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">一、人员投入</div>
+            <table class="log-table">
+              <tr>
+                <th>工种</th>
+                <th>人数</th>
+                <th>班组</th>
+              </tr>
+              <tr>
+                <td>钢筋工</td>
+                <td>12人</td>
+                <td>钢筋班-张伟</td>
+              </tr>
+              <tr>
+                <td>木工</td>
+                <td>8人</td>
+                <td>木工班-王强</td>
+              </tr>
+              <tr>
+                <td>混凝土工</td>
+                <td>6人</td>
+                <td>混凝土班-李刚</td>
+              </tr>
+              <tr>
+                <td>架子工</td>
+                <td>4人</td>
+                <td>架子班-赵磊</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;font-weight:bold;">合计：</td>
+                <td style="font-weight:bold;">30人</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">二、机械设备</div>
+            <table class="log-table">
+              <tr>
+                <th>设备名称</th>
+                <th>规格型号</th>
+                <th>数量</th>
+                <th>状态</th>
+              </tr>
+              <tr>
+                <td>塔吊</td>
+                <td>QTZ63</td>
+                <td>1台</td>
+                <td>正常</td>
+              </tr>
+              <tr>
+                <td>混凝土搅拌机</td>
+                <td>JS500</td>
+                <td>2台</td>
+                <td>正常</td>
+              </tr>
+              <tr>
+                <td>钢筋弯曲机</td>
+                <td>GW40</td>
+                <td>1台</td>
+                <td>正常</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">三、材料消耗</div>
+            <table class="log-table">
+              <tr>
+                <th>材料名称</th>
+                <th>规格</th>
+                <th>单位</th>
+                <th>数量</th>
+                <th>使用部位</th>
+              </tr>
+              <tr>
+                <td>混凝土</td>
+                <td>C30</td>
+                <td>m³</td>
+                <td>56</td>
+                <td>3#楼3层梁板柱</td>
+              </tr>
+              <tr>
+                <td>钢筋</td>
+                <td>HRB400 Φ18</td>
+                <td>t</td>
+                <td>3.2</td>
+                <td>3#楼3层墙柱</td>
+              </tr>
+              <tr>
+                <td>模板</td>
+                <td>1830*915*15</td>
+                <td>张</td>
+                <td>85</td>
+                <td>3#楼3层顶板</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">四、施工内容</div>
+            <table class="log-table">
+              <tr>
+                <th style="width:30%;">任务名称</th>
+                <th style="width:15%;">完成工程量</th>
+                <th>施工描述</th>
+              </tr>
+              <tr>
+                <td>3#楼三层梁板钢筋绑扎</td>
+                <td>850㎡</td>
+                <td>完成梁钢筋绑扎及板面钢筋铺设，预埋水电管线套管</td>
+              </tr>
+              <tr>
+                <td>3#楼三层混凝土浇筑</td>
+                <td>56m³</td>
+                <td>三层柱墙混凝土浇筑完成，浇筑时间6:00-18:00</td>
+              </tr>
+              <tr>
+                <td>3#楼三层模板加固</td>
+                <td>420㎡</td>
+                <td>三层墙柱模板加固完成，垂直度偏差≤5mm</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">五、安全情况</div>
+            <div style="padding: 12px; background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 4px;">
+              今日安全生产，无安全事故。下午2:00进行安全巡查，发现2#楼楼梯间临边防护有一处松动，已通知班组整改完成。
+            </div>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">六、质量情况</div>
+            <div style="padding: 12px; background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 4px;">
+              三层柱墙混凝土浇筑施工质量控制良好，坍落度检测合格（180mm），试块留置3组。钢筋隐蔽验收已通过，焊接接头抽样送检合格。
+            </div>
+          </div>
+
+          <div class="log-section">
+            <div class="log-section-title">七、备注</div>
+            <div style="padding: 12px; background: #f9f9f9; border: 1px solid #e8e8e8; border-radius: 4px;">
+              明日计划：3#楼三层模板拆除，四层柱墙钢筋绑扎；2#楼二层梁板混凝土浇筑。需注意塔吊维保（已预约）。
+            </div>
+          </div>
+
+          <div class="log-footer">
+            <div class="log-signature">
+              <div class="signature-item">
+                <div>技术负责人</div>
+                <div class="signature-line"></div>
+              </div>
+              <div class="signature-item">
+                <div>安全员</div>
+                <div class="signature-line"></div>
+              </div>
+              <div class="signature-item">
+                <div>施工员</div>
+                <div class="signature-line"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Create Template Modal -->
+<div id="create-template-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">新建日志模板</span>
+      <span class="modal-close" onclick="closeModal('create-template')">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">模板名称 <span style="color:#ff4d4f;">*</span></label>
+        <input type="text" placeholder="例如：市政工程日志模板" style="width:100%;">
+      </div>
+      <div class="form-group">
+        <label class="form-label">适用场景</label>
+        <select style="width:100%;">
+          <option value="">请选择...</option>
+          <option value="building">房屋建筑工程</option>
+          <option value="municipal">市政工程</option>
+          <option value="railway">铁路工程</option>
+          <option value="highway">公路工程</option>
+          <option value="custom">自定义</option>
+        </select>
+        <div class="form-hint">选择后系统将自动填充推荐板块，可自行调整</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">模板说明</label>
+        <textarea placeholder="描述此模板的适用范围..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal('create-template')">取消</button>
+      <button class="btn btn-primary" onclick="closeModal('create-template')">创建并编辑</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tabEl, contentId) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+  document.getElementById(contentId).style.display = 'block';
+}
+
+function toggleSection(headerEl) {
+  const body = headerEl.nextElementSibling;
+  const arrow = headerEl.querySelector('span:last-child');
+  if (body.classList.contains('hidden')) {
+    body.classList.remove('hidden');
+    arrow.textContent = '▼';
+  } else {
+    body.classList.add('hidden');
+    arrow.textContent = '▶';
+  }
+}
+
+function openModal(type) {
+  if (type === 'create-template') {
+    document.getElementById('create-template-modal').classList.remove('hidden');
+  }
+}
+
+function closeModal(type) {
+  if (type === 'create-template') {
+    document.getElementById('create-template-modal').classList.add('hidden');
+  }
+}
+
+function addField(btnEl) {
+  const fieldHtml = `
+    <div class="field-item">
+      <input type="text" class="field-label" placeholder="字段名称" value="">
+      <select class="field-type">
+        <option>文本</option>
+        <option>数字</option>
+        <option>日期</option>
+        <option>多行文本</option>
+      </select>
+      <select class="field-source">
+        <option value="manual">手动填写</option>
+        <option value="auto:xxx">自动获取</option>
+      </select>
+      <span class="field-required">✗</span>
+    </div>
+  `;
+  const sectionBody = btnEl.parentElement;
+  sectionBody.insertAdjacentHTML('beforebegin', fieldHtml);
+}
+
+// 模拟打印功能
+document.querySelector('[onclick*="一键打印"]')?.addEventListener('click', function() {
+  window.print();
+});
+</script>
+
+</body>
+</html>
